@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Video;
+using Sepinaco.VideoApiManager; // Importa el namespace donde está VideoApiManager
 
 
 public class ScriptVideoclip : MonoBehaviour
@@ -21,11 +22,44 @@ public class ScriptVideoclip : MonoBehaviour
 
     private VideoPlayer videoPlayer;
 
+    public List<string> videos;
+
+    private bool isSearchingVideos;
+
     void Start()
     {
+
+        // Searching videos mode on ;)
+        isSearchingVideos = true;
+
+        // Get Videos from API
+        videos = new List<string>();
+
         ReplaceSceneMaterials(videoMaterial);
         StartVideoPlayer();
         InitializeVideoObjects();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if( isSearchingVideos ) {
+            videos = VideoApiManager.Instance.GetVideos();
+            if ( HasVideos(videos) ) {
+                isSearchingVideos = false;
+                Debug.Log("LOGRADO!!" + videos.Count);
+            } 
+        }
+
+    }
+
+    public bool HasVideos(List<string> videos)
+    {
+        return videos != null && videos.Count > 0;
+    }
+
+    public void SearchVideos() {
+        isSearchingVideos = true;
     }
 
     void ReplaceSceneMaterials(Material newMaterial)
@@ -126,11 +160,7 @@ public class ScriptVideoclip : MonoBehaviour
         // Aquí puedes añadir más lógica basada en la colisión
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
 }
 
 
