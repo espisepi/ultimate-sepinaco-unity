@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -12,6 +13,8 @@ namespace Sepinaco.VideoApiManager
 {
 public class VideoApiManager : Singleton<VideoApiManager>
 {
+
+    public string pathMyServer = "https://sepinaco.com:3000";
 
     public string apiUrl = "https://sepinaco.com:3000/media-list";
 
@@ -61,6 +64,11 @@ public class VideoApiManager : Singleton<VideoApiManager>
 
     public List<string> GetVideos() {
         return videos;
+    }
+
+    public string ConvertVideoUrlToMyApiServer(string url)
+    {
+        return pathMyServer + "/media/" + url;
     }
 
 }

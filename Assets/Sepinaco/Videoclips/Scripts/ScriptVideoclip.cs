@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -37,17 +38,18 @@ public class ScriptVideoclip : MonoBehaviour
 
         ReplaceSceneMaterials(videoMaterial);
         StartVideoPlayer();
-        InitializeVideoObjects();
+        // InitializeVideoLocalObjects();
     }
 
     // Update is called once per frame
     void Update()
     {
         if( isSearchingVideos ) {
-            videos = VideoApiManager.Instance.GetVideos();
+            videos = GetVideoApiManager().GetVideos();
             if ( HasVideos(videos) ) {
-                StopSearchVideos();
                 Debug.Log("LOGRADO!!" + videos.Count);
+                StopSearchVideos();
+                InitializeVideoApiObjects();
             } 
         }
 
@@ -64,6 +66,11 @@ public class ScriptVideoclip : MonoBehaviour
 
     public void StopSearchVideos() {
         isSearchingVideos = false;
+    }
+
+    public VideoApiManager GetVideoApiManager()
+    {
+        return VideoApiManager.Instance;
     }
 
     void ReplaceSceneMaterials(Material newMaterial)
@@ -97,19 +104,58 @@ public class ScriptVideoclip : MonoBehaviour
         // videoPlayer.SetTargetAudioSource(0, GetComponent<AudioSource>());
 
         // Establece el clip de video
-        SetVideoClip(videoPaths[0]);
+        SetVideoLocal(videoPaths[0]);
 
         // Opcional: Reproducir automáticamente
         videoPlayer.Play();
     }
 
-    void SetVideoClip(string path)
+    void SetVideoLocal(string path)
     {
         // https://docs.unity3d.com/Manual/StreamingAssets.html
         videoPlayer.url = System.IO.Path.Combine(Application.streamingAssetsPath, path);
     }
 
-    void InitializeVideoObjects() {
+    void SetVideoApi(string urlVideo) {
+        // string urlVideoApi = Uri.EscapeDataString(GetVideoApiManager().ConvertVideoUrlToMyApiServer(urlVideo));
+        string urlVideoApi = GetVideoApiManager().ConvertVideoUrlToMyApiServer(urlVideo);
+        videoPlayer.url = urlVideoApi;
+        // videoPlayer.url = "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+        Debug.Log("CAMBIANDO A VIDEO: " + urlVideoApi);
+
+    }
+
+    void InitializeVideoApiObjects() {
+        MeshRenderer parentRenderer = GetComponent<MeshRenderer>();
+        MeshFilter parentFilter = GetComponent<MeshFilter>();
+        for (int i = 0; i < videos.Count; i++)
+        {
+            // Debug.Log("Creando el gameobject para el video: " + videos[i]);
+            // Crea un nuevo GameObject para cada video
+            GameObject videoObject = new GameObject(videos[i]);
+            videoObject.transform.SetParent(transform); // Establece el GameObject padre
+            videoObject.transform.localPosition = Vector3.right * i * 2.0f; // Ajusta la posición relativa según sea necesario
+
+            // Copia los componentes de renderizado del padre al hijo
+            if (parentRenderer != null && parentFilter != null)
+            {
+                MeshRenderer childRenderer = videoObject.AddComponent<MeshRenderer>();
+                MeshFilter childFilter = videoObject.AddComponent<MeshFilter>();
+                childRenderer.material = parentRenderer.material;
+                childFilter.mesh = parentFilter.mesh;
+            }
+
+            // Añade un Collider para detectar colisiones
+            BoxCollider collider = videoObject.AddComponent<BoxCollider>();
+            collider.isTrigger = true; // Hacer el collider un trigger si quieres evitar físicas reales
+
+            // Añade el script de manejo de trigger a cada hijo
+            videoObject.AddComponent<ChildTriggerHandler>();
+
+        }
+    }
+
+    void InitializeVideoLocalObjects() {
         MeshRenderer parentRenderer = GetComponent<MeshRenderer>();
         MeshFilter parentFilter = GetComponent<MeshFilter>();
         for (int i = 0; i < videoPaths.Length; i++)
@@ -146,7 +192,7 @@ public class ScriptVideoclip : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // string urlVideo = other.name;
-        // SetVideoClip(urlVideo);
+        // SetVideoLocal(urlVideo);
         // Debug.Log("Colisiono con el objeto: " + urlVideo);
         // VideoTrigger trigger = other.GetComponent<VideoTrigger>();
         // if (trigger != null)
@@ -160,7 +206,7 @@ public class ScriptVideoclip : MonoBehaviour
     {
         Debug.Log(child.name + " colisionó con " + other.gameObject.name);
         string urlVideo = child.name;
-        SetVideoClip(urlVideo);
+        SetVideoApi(urlVideo);
         // Aquí puedes añadir más lógica basada en la colisión
     }
 
