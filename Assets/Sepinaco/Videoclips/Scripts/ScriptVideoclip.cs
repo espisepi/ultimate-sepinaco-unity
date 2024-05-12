@@ -46,7 +46,7 @@ public class ScriptVideoclip : MonoBehaviour
         if( isSearchingVideos ) {
             videos = VideoApiManager.Instance.GetVideos();
             if ( HasVideos(videos) ) {
-                isSearchingVideos = false;
+                StopSearchVideos();
                 Debug.Log("LOGRADO!!" + videos.Count);
             } 
         }
@@ -60,6 +60,10 @@ public class ScriptVideoclip : MonoBehaviour
 
     public void SearchVideos() {
         isSearchingVideos = true;
+    }
+
+    public void StopSearchVideos() {
+        isSearchingVideos = false;
     }
 
     void ReplaceSceneMaterials(Material newMaterial)
